@@ -1,0 +1,118 @@
+=======================================
+🚀 Multi-User Parallel Stress Test
+=======================================
+Timestamp: Mon Dec  8 06:37:16 AM UTC 2025
+Output dir: /tmp/ollama_stress_tests
+
+🔄 Unloading existing models...
+
+📊 Initial VRAM:
+NVIDIA RTX A1000, 1 MiB, 8188 MiB
+
+=== TEST 1: 3 Users (2 PLC + 1 Integration) ===
+[0;34m[User 1 - PLC][0m Starting: Generate IEC 61131-3 TON timer with 5 second delay...
+[0;34m[User 2 - PLC][0m Starting: Generate ladder logic equivalent for motor starter...
+[1;33m[User 3 - INT][0m Starting: Create Node-RED flow for MQTT to InfluxDB data pip...
+⏳ Waiting for all users to complete...
+[0;32m[User 1 - PLC][0m Completed in 84.017980850s (9867 bytes, ~564 tokens, 6.71 tok/s)
+[0;32m[User 2 - PLC][0m Completed in 180.531623717s (43151 bytes, ~1574 tokens, 8.71 tok/s)
+[0;32m[User 3 - INT][0m Completed in 207.565195951s (82707 bytes, ~2932 tokens, 14.12 tok/s)
+[0;32m✅ Test 1 completed in 212s[0m
+
+=== TEST 2: 5 Users (3 PLC + 2 Integration) ===
+[0;34m[User 4 - PLC][0m Starting: Create Structured Text code for PID temperature co...
+[1;33m[User 5 - INT][0m Starting: Generate Grafana dashboard JSON for industrial mac...
+[0;34m[User 6 - PLC][0m Starting: Generate IEC 61131-3 TON timer with 5 second delay...
+[1;33m[User 7 - INT][0m Starting: Generate Grafana dashboard JSON for industrial mac...
+⏳ Waiting for all users to complete...
+[0;34m[User 8 - PLC][0m Starting: Generate IEC 61131-3 TON timer with 5 second delay...
+[0;32m[User 4 - PLC][0m Completed in 125.142795155s (15802 bytes, ~839 tokens, 6.70 tok/s)
+[0;32m[User 6 - PLC][0m Completed in 202.777880278s (57206 bytes, ~2116 tokens, 10.43 tok/s)
+[0;32m[User 8 - PLC][0m Completed in 289.660014431s (88138 bytes, ~3178 tokens, 10.97 tok/s)
+[0;32m[User 5 - INT][0m Completed in 318.289134514s (125029 bytes, ~4336 tokens, 13.62 tok/s)
+[0;32m[User 7 - INT][0m Completed in 359.161307001s (139902 bytes, ~4912 tokens, 13.67 tok/s)
+[0;32m✅ Test 2 completed in 362s[0m
+
+=== TEST 3: Burst Mode - 8 Users (4 PLC + 4 Integration) ===
+[0;34m[User 10 - PLC][0m Starting: Write function block for conveyor belt control wit...
+[0;34m[User 11 - PLC][0m Starting: Generate ladder logic equivalent for motor starter...
+[0;34m[User 9 - PLC][0m Starting: Generate IEC 61131-3 TON timer with 5 second delay...
+[0;34m[User 12 - PLC][0m Starting: Write function block for conveyor belt control wit...
+[1;33m[User 14 - INT][0m Starting: Write Home Assistant automation for temperature-ba...
+[1;33m[User 13 - INT][0m Starting: Write Home Assistant automation for temperature-ba...
+[1;33m[User 15 - INT][0m Starting: Write Home Assistant automation for temperature-ba...
+⏳ Waiting for burst to complete...
+[1;33m[User 16 - INT][0m Starting: Write Home Assistant automation for temperature-ba...
+[0;32m[User 15 - INT][0m Completed in 14.889068245s (6946 bytes, ~339 tokens, 22.76 tok/s)
+[0;32m[User 16 - INT][0m Completed in 42.105883359s (16919 bytes, ~692 tokens, 16.43 tok/s)
+[0;32m[User 13 - INT][0m Completed in 87.627437164s (34009 bytes, ~1293 tokens, 14.75 tok/s)
+[0;32m[User 14 - INT][0m Completed in 110.475823310s (43241 bytes, ~1575 tokens, 14.25 tok/s)
+[0;32m[User 12 - PLC][0m Completed in 233.311172773s (56638 bytes, ~2132 tokens, 9.13 tok/s)
+[0;32m[User 10 - PLC][0m Completed in 313.706240265s (100405 bytes, ~3559 tokens, 11.34 tok/s)
+[0;32m[User 9 - PLC][0m Completed in 407.241029256s (132866 bytes, ~4712 tokens, 11.57 tok/s)
+[0;32m[User 11 - PLC][0m Completed in 479.757894388s (167125 bytes, ~5768 tokens, 12.02 tok/s)
+[0;32m✅ Test 3 completed in 480s[0m
+
+=======================================
+📊 FINAL REPORT
+=======================================
+
+📈 Test Durations:
+  Test 1 (3 users):  212s
+  Test 2 (5 users):  362s
+  Test 3 (8 users):  480s
+
+📁 Files Generated:
+-rw-rw-r-- 1 giuseppe giuseppe 1.0K Dec  8 06:55 /tmp/ollama_stress_tests/metrics_20251208_063716.csv
+-rw-rw-r-- 1 giuseppe giuseppe 3.8K Dec  8 06:55 /tmp/ollama_stress_tests/stress_test_20251208_063716.log
+-rw-rw-r-- 1 giuseppe giuseppe  178 Dec  8 06:54 /tmp/ollama_stress_tests/summary_20251208_063716.csv
+-rw-rw-r-- 1 giuseppe giuseppe  99K Dec  8 06:52 /tmp/ollama_stress_tests/user10_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 164K Dec  8 06:55 /tmp/ollama_stress_tests/user11_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  56K Dec  8 06:50 /tmp/ollama_stress_tests/user12_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  34K Dec  8 06:48 /tmp/ollama_stress_tests/user13_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  43K Dec  8 06:48 /tmp/ollama_stress_tests/user14_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 6.8K Dec  8 06:47 /tmp/ollama_stress_tests/user15_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  17K Dec  8 06:47 /tmp/ollama_stress_tests/user16_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 9.7K Dec  8 06:38 /tmp/ollama_stress_tests/user1_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  43K Dec  8 06:40 /tmp/ollama_stress_tests/user2_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  81K Dec  8 06:40 /tmp/ollama_stress_tests/user3_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  16K Dec  8 06:43 /tmp/ollama_stress_tests/user4_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 123K Dec  8 06:46 /tmp/ollama_stress_tests/user5_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  56K Dec  8 06:44 /tmp/ollama_stress_tests/user6_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 137K Dec  8 06:46 /tmp/ollama_stress_tests/user7_integration_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe  87K Dec  8 06:45 /tmp/ollama_stress_tests/user8_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 130K Dec  8 06:53 /tmp/ollama_stress_tests/user9_plc_20251208_063716.txt
+-rw-rw-r-- 1 giuseppe giuseppe 5.4K Dec  8 06:50 /tmp/ollama_stress_tests/vram_monitor_20251208_063716.csv
+
+📊 Performance Metrics:
+
+--- PLC (Qwen 14B) ---
+  Requests: 9
+  Avg duration: 257.35 s
+  Avg tokens: 2716 tokens
+  Avg speed: 9.73 tokens/sec
+  Total tokens: 24442
+
+--- Integration (Mistral 7B) ---
+  Requests: 7
+  Avg duration: 162.87 s
+  Avg tokens: 2297 tokens
+  Avg speed: 15.66 tokens/sec
+  Total tokens: 16079
+
+--- Overall Stats ---
+  Total requests: 16
+  Total duration: 3456.26 s
+  Total tokens: 40521
+  Overall avg speed: 12.32 tokens/sec
+  Aggregate throughput: 11.72 tokens/sec
+
+💾 Peak VRAM Usage:
+  Peak: 7385 MB / 8188 MB (90.19%)
+
+NVIDIA RTX A1000, 7387 MiB, 8188 MiB
+
+✅ Stress test completed!
+📄 Full log: /tmp/ollama_stress_tests/stress_test_20251208_063716.log
+📊 Metrics CSV: /tmp/ollama_stress_tests/metrics_20251208_063716.csv
+📈 VRAM logs: /tmp/ollama_stress_tests/vram_monitor_20251208_063716*.csv

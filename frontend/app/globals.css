@@ -1,0 +1,45 @@
+/**
+ * MODIFICATO: 2025-12-07
+ * - Rimosso supporto light mode
+ * - Applicato tema ChatGPT fisso (#131314 sfondo, #1E1F20 cards)
+ * - Aggiunta scrollbar personalizzata dark
+ */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Tema ChatGPT Fisso - No Light Mode */
+:root {
+  --background: #131314;
+  --foreground: #ececec;
+  --card: #1E1F20;
+  --card-hover: #2F2F2F;
+  --border: #3C4043;
+  --muted: #565869;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* Scrollbar personalizzata */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1E1F20;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3C4043;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #565869;
+}

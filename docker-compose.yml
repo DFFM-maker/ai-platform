@@ -1,0 +1,87 @@
+services:
+  # --- BACKEND (FastAPI) ---
+  backend:
+    build: ./backend
+    container_name: ai_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      # Sincronizza il codice locale con il container (Hot-Reload)
+      - ./backend:/app
+    environment:
+      - PROJECT_NAME=AI_Enterprise_Platform
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=securepass
+      - POSTGRES_DB=aidb
+      - QDRANT_URL=http://qdrant:6333
+      # PUNTA AL SERVER OLLAMA FISICO (GPU)
+      - OLLAMA_BASE_URL=http://192.168.1.243:11434
+      # AUTH (Cambia JWT_SECRET in produzione!)
+      - JWT_SECRET_KEY=change-this-to-random-32-char-string-in-production-please
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - ALLOWED_ORIGINS=http://localhost:3000,http://192.168.1.244:3000,https://ai-platform.dffm.it
+      # Email whitelist - solo questi possono accedere
+      - ALLOWED_EMAILS=giuseppe@defranceschi.pro,giuseppe.defranceschi@gmail.com
+    depends_on:
+      - postgres
+      - qdrant
+    networks:
+      - ai_net
+
+  # --- DATABASE (PostgreSQL) ---
+  postgres:
+    image: postgres:15-alpine
+    container_name: ai_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: securepass
+      POSTGRES_DB: aidb
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    networks:
+      - ai_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # --- VECTOR DB (Qdrant) ---
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: ai_qdrant
+    restart: always
+    ports:
+      - "6333:6333"
+    volumes:
+      - ./qdrant_storage:/qdrant/storage
+    networks:
+      - ai_net
+
+  # --- FRONTEND (Next.js) ---
+  # Nota: Scommenta solo dopo aver creato i file del frontend
+  frontend:
+    build: 
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+        - NEXT_PUBLIC_API_URL=/api/v1
+    container_name: ai_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - NEXT_PUBLIC_API_URL=/api/v1
+    depends_on:
+      - backend
+    networks:
+      - ai_net
+
+networks:
+  ai_net:
+    driver: bridge

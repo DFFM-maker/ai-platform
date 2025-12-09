@@ -1,0 +1,7 @@
+Model,Metric,Value
+Qwen14B,AvgSpeed,9.445
+Mistral7B,AvgSpeed,15.6571
+Qwen14B,AvgDuration,229.549
+Mistral7B,AvgDuration,162.873
+Qwen14B,AvgTokens,2334.25
+Mistral7B,AvgTokens,2297

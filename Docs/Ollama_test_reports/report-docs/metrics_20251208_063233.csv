@@ -1,0 +1,4 @@
+UserID,Type,Model,Duration_Sec,Output_Bytes,Word_Count,Tokens_Est,Tokens_Per_Sec
+User 1,PLC,Qwen14B,88.726343540,10962,458,595,6.70
+User 3,Integration,Mistral7B,158.052732255,61675,1581,2055,13.00
+User 2,PLC,Qwen14B,160.055364321,42527,1254,1630,10.18
