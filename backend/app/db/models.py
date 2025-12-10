@@ -1,4 +1,5 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Integer, Text, Float, Enum as SQLEnum
+from sqlalchemy.orm import relationship  # <--- QUESTO MANCAVA!
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 import uuid
@@ -24,7 +25,7 @@ class InviteToken(Base):
     __tablename__ = "invite_tokens"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     token = Column(String, unique=True, index=True)
-    email = Column(String, nullable=True)  # Email destinatario (opzionale)
+    email = Column(String, nullable=True)
     created_by = Column(UUID(as_uuid=True), ForeignKey("users.id"))
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     expires_at = Column(DateTime(timezone=True))
@@ -52,6 +53,9 @@ class ChatSession(Base):
     title = Column(String)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relazione per accedere facilmente ai messaggi
+    messages = relationship("ChatMessage", back_populates="session", cascade="all, delete-orphan")
 
 class ChatMessage(Base):
     __tablename__ = "chat_messages"
@@ -60,6 +64,25 @@ class ChatMessage(Base):
     role = Column(String)
     content = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # Back-reference alla sessione
+    session = relationship("ChatSession", back_populates="messages")
+    
+    # Relazione per il versionamento (La parte che ti dava errore)
+    versions = relationship("ChatResponseVersion", back_populates="chat_message", cascade="all, delete-orphan")
+
+# --- NUOVA TABELLA: VERSIONING ---
+class ChatResponseVersion(Base):
+    __tablename__ = "chat_response_versions"
+    
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    chat_message_id = Column(UUID(as_uuid=True), ForeignKey("chat_messages.id"))
+    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Chi ha fatto la modifica (o null se AI)
+    content = Column(Text) # Il contenuto completo di QUESTA versione
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    parent_version_id = Column(UUID(as_uuid=True), ForeignKey("chat_response_versions.id"), nullable=True)
+    
+    chat_message = relationship("ChatMessage", back_populates="versions")
 
 # --- DOCUMENTI (RAG) ---
 class Document(Base):
