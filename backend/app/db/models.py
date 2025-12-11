@@ -78,6 +78,8 @@ class ChatResponseVersion(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     chat_message_id = Column(UUID(as_uuid=True), ForeignKey("chat_messages.id"))
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True) # Chi ha fatto la modifica (o null se AI)
+    version_number = Column(Integer, default=1, nullable=False) # Numero progressivo della versione
+    is_current = Column(Boolean, default=True, nullable=False) # Flag per la versione attiva
     content = Column(Text) # Il contenuto completo di QUESTA versione
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     parent_version_id = Column(UUID(as_uuid=True), ForeignKey("chat_response_versions.id"), nullable=True)

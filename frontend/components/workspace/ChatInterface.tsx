@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import Image from "next/image"
 import {
   Send, Bot, RefreshCw, Sparkles, Code2, Menu, Plus,
-  MessageSquare, Square, Pencil, Copy, Check
+  MessageSquare, Square, Pencil, Copy, Check, History
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
@@ -15,11 +15,15 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils"
 import CodeVersionPanel from "@/components/CodeVersionPanel"
 import { useAuth } from "@/contexts/AuthContext"
+import { VersionHistoryPanel } from "./VersionHistoryPanel"
 
 // --- INTERFACCE ---
 interface Message {
+  id?: string // <--- Aggiungi questo campo opzionale
   role: "user" | "assistant" | "system"
   content: string
+  current_version_number?: number // Add current_version_number
+  has_versions?: boolean // Add has_versions
 }
 
 interface ModelPreset {
@@ -31,9 +35,9 @@ interface ModelPreset {
 
 interface CodeVersion {
   id: string
-  code: string
-  timestamp: Date
-  description: string
+  content: string; // Changed from 'code' to 'content'
+  timestamp: Date;
+  description: string;
 }
 
 interface ChatSession {
@@ -104,8 +108,8 @@ const MessageContent = ({ content }: { content: string }) => {
                 )}
               </button>
             </div>
-            <div className="p-4 overflow-x-auto bg-[#131314]">
-              <pre className="text-sm font-mono text-gray-200">
+            <div className="p-4 bg-[#131314]">
+              <pre style={{ whiteSpace: 'pre-wrap', fontFamily: 'monospace', overflowX: 'auto', margin: 0 }} className="text-sm text-gray-200">
                 <code>{code}</code>
               </pre>
             </div>
@@ -128,16 +132,29 @@ export function ChatInterface() {
   const [useRAG, setUseRAG] = useState(false)
   const [presets, setPresets] = useState<ModelPreset[]>([])
   const [selectedPreset, setSelectedPreset] = useState("")
+    // Persisti/ripristina il modello scelto
+    useEffect(() => {
+      const savedPreset = localStorage.getItem('selectedPreset')
+      if (savedPreset) setSelectedPreset(savedPreset)
+    }, [])
+
+    useEffect(() => {
+      if (selectedPreset) localStorage.setItem('selectedPreset', selectedPreset)
+    }, [selectedPreset])
   const [codeVersions, setCodeVersions] = useState<CodeVersion[]>([])
   const [showVersionPanel, setShowVersionPanel] = useState(false)
   const [sessions, setSessions] = useState<ChatSession[]>([])
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null)
   const [showSidebar, setShowSidebar] = useState(false)
-
+  // --- NUOVI STATI PER LA CRONOLOGIA ---
+  const [historyPanelOpen, setHistoryPanelOpen] = useState(false)
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null)
   // Refs
   const scrollRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null) // Ref per STOP
+  const currentAssistantMessageIdRef = useRef<string | undefined>(undefined) // Ref per l'ID del messaggio assistente
+
 
   // --- LOGICA AUTO-GROW TEXTAREA ---
   const adjustHeight = () => {
@@ -316,6 +333,8 @@ export function ChatInterface() {
       const decoder = new TextDecoder()
       let done = false
       let assistantResponse = ""
+      let currentAssistantMessageId: string | undefined // Variable to store the message ID
+
 
       while (!done) {
         const { value, done: doneReading } = await reader.read()
@@ -330,6 +349,23 @@ export function ChatInterface() {
 
             try {
               const parsed = JSON.parse(data)
+
+              // SE RICEVIAMO METADATI (ID)
+              if (parsed.message_id) {
+                currentAssistantMessageIdRef.current = parsed.message_id // Assegna al ref
+                setMessages((prev) => {
+                  const newMsgs = [...prev]
+                  const lastMsg = newMsgs[newMsgs.length - 1]
+                  // Assegniamo l'ID ricevuto dal DB all'ultimo messaggio
+                  lastMsg.id = parsed.message_id
+                  return newMsgs
+                })
+                // Se c'è anche il session_id (già gestito, ma per sicurezza)
+                if (parsed.session_id && !currentSessionId) {
+                  setCurrentSessionId(parsed.session_id)
+                }
+                continue // Passa alla prossima riga
+              }
 
               // --- FIX [object Object] ---
               if (typeof parsed === 'object' && parsed !== null) {
@@ -350,20 +386,26 @@ export function ChatInterface() {
             setMessages((prev) => {
               const newMsgs = [...prev]
               newMsgs[newMsgs.length - 1].content = assistantResponse
-
-              // Logica estrazione codice (lasciata invariata)
+              // --- Estrazione progressiva codeblock senza duplicati ---
               if (selectedPreset.includes('coder') || selectedPreset.includes('Qwen')) {
                 const codeBlocks = extractCodeBlocks(assistantResponse)
-                if (codeBlocks.length > 0) {
-                  const newVersions = codeBlocks.map((code, idx) => ({
-                    id: `${Date.now()}-${idx}`,
-                    code,
-                    timestamp: new Date(),
-                    description: `Code block ${idx + 1} from ${selectedPreset}`
-                  }))
-                  setCodeVersions(prev => [...prev, ...newVersions])
-                  setShowVersionPanel(true)
-                }
+                setCodeVersions(prev => {
+                  // Evita duplicati: aggiorna solo se cambia il contenuto
+                  if (codeBlocks.length === 0) return prev
+                  // Crea una nuova lista di versioni, una per ogni blocco
+                  const newVersions = codeBlocks.map((code, idx) => {
+                    // Cerca se già esiste una versione con lo stesso contenuto
+                    const existing = prev.find(v => v.content === code)
+                    return existing || {
+                      id: `${Date.now()}-${idx}`,
+                      content: code,
+                      timestamp: new Date(),
+                      description: `Code block ${idx + 1} from ${selectedPreset}`
+                    }
+                  })
+                  return newVersions
+                })
+                if (codeBlocks.length > 0) setShowVersionPanel(true)
               }
               return newMsgs
             })
@@ -379,6 +421,32 @@ export function ChatInterface() {
     } finally {
       setIsLoading(false)
       abortControllerRef.current = null
+
+      // Save code versions to backend if available and associate with the message
+      if (currentAssistantMessageIdRef.current && codeVersions.length > 0) {
+        try {
+          const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://ai-platform.dffm.it/api/v1"
+          await fetch(`${apiUrl}/chat/messages/${currentAssistantMessageIdRef.current}/versions`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ versions: codeVersions })
+          })
+
+          // After successfully saving, update the message to indicate it has versions
+          setMessages(prev => prev.map(msg =>
+            msg.id === currentAssistantMessageIdRef.current ? { ...msg, has_versions: true } : msg
+          ))
+          
+          // Clear current session code versions, as they are now persisted
+          setCodeVersions([]);
+
+        } catch (saveError) {
+          console.error("Failed to save code versions:", saveError)
+        }
+      }
     }
   }
 
@@ -388,6 +456,18 @@ export function ChatInterface() {
         isOpen={showVersionPanel}
         onClose={() => setShowVersionPanel(false)}
         versions={codeVersions}
+      />
+
+      <VersionHistoryPanel
+        isOpen={historyPanelOpen}
+        onClose={() => setHistoryPanelOpen(false)}
+        messageId={selectedMessageId}
+        onRestore={(newContent) => {
+          // Aggiorna la UI locale istantaneamente quando ripristini
+          setMessages(prev => prev.map(m =>
+            m.id === selectedMessageId ? { ...m, content: newContent } : m
+          ))
+        }}
       />
 
       {/* SFONDO SCURO */}
@@ -515,7 +595,24 @@ export function ChatInterface() {
                   )}>
                     {/* Renderizzatore Markdown Custom */}
                     <MessageContent content={msg.content} />
+
                   </div>
+                  {msg.id && msg.has_versions && (
+                    <div className="transition-opacity self-center ml-2">
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 text-gray-500 hover:text-white hover:bg-white/10"
+                        onClick={() => {
+                          setSelectedMessageId(msg.id!)
+                          setHistoryPanelOpen(true)
+                        }}
+                        title="Vedi cronologia versioni"
+                      >
+                        <History className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  )}
                 </div>
               ))}
               <div ref={scrollRef} />

@@ -128,10 +128,11 @@ async def stream_chat(
                     await history_service.add_message(session_id_to_use, "user", last_user_msg)
                 
                 # Salva risposta assistant
-                await history_service.add_message(session_id_to_use, "assistant", full_response)
+                # MODIFICA QUI: Catturiamo l'oggetto messaggio restituito
+                assistant_msg = await history_service.add_message(session_id_to_use, "assistant", full_response)
                 
-                # Invia session_id al client
-                yield f"data: {{\"session_id\": \"{session_id_to_use}\"}}\n\n"
+                # MODIFICA QUI: Inviamo anche il message_id al frontend
+                yield f"data: {{\"session_id\": \"{session_id_to_use}\", \"message_id\": \"{str(assistant_msg.id)}\"}}\n\n"
             
             yield "data: [DONE]\n\n"
         except Exception as e:
@@ -250,3 +251,48 @@ async def delete_session(
     await db.commit()
     
     return {"message": "Sessione eliminata"}
+    # ==================== VERSIONING API ====================
+    
+    
+    class VersionCreateRequest(BaseModel):
+        content: str
+    
+    @router.get("/messages/{message_id}/versions", tags=["Versioning"])
+    async def get_message_versions(
+        message_id: str,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+    ):
+        """Ottieni lo storico delle versioni di un messaggio"""
+        history_service = ChatHistoryService(db)
+        versions = await history_service.get_message_versions(message_id)
+        return versions
+    
+    @router.post("/messages/{message_id}/versions", tags=["Versioning"])
+    async def create_new_version(
+        message_id: str,
+        request: VersionCreateRequest,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+    ):
+        """
+        Crea una nuova versione di un messaggio (Edit).
+        Aggiorna anche il contenuto principale del messaggio.
+        """
+        history_service = ChatHistoryService(db)
+        new_version = await history_service.create_version(
+            message_id=message_id,
+            content=request.content,
+            user_id=current_user.id
+        )
+        return new_version
+
+    @router.post("/versions/{version_id}/restore", tags=["Versioning"])
+    async def restore_message_version(
+        version_id: str,
+        db: AsyncSession = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+    ):
+        history_service = ChatHistoryService(db)
+        restored_version = await history_service.restore_version(version_id)
+        return restored_version

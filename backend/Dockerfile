@@ -13,7 +13,11 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia del codice sorgente
+# Copia i file di Alembic nella WORKDIR del container
+COPY ../alembic.ini .
+COPY ../alembic ./alembic
+
+# Copia del codice sorgente dell'app
 COPY . .
 
 # Comando di avvio

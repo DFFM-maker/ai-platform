@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Copy, Check } from 'lucide-react';
 
 interface CodeVersion {
   id: string;
-  code: string;
+  content: string; // Modificato da 'code' a 'content'
   timestamp: Date;
   description: string;
 }
@@ -22,7 +22,7 @@ export default function CodeVersionPanel({ isOpen, onClose, versions }: CodeVers
 
   const handleCopy = async () => {
     if (versions[currentVersion]) {
-      await navigator.clipboard.writeText(versions[currentVersion].code);
+      await navigator.clipboard.writeText(versions[currentVersion].content); // Usa 'content'
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -86,7 +86,7 @@ export default function CodeVersionPanel({ isOpen, onClose, versions }: CodeVers
             {copied ? <Check size={16} className="text-green-400" /> : <Copy size={16} className="text-gray-400" />}
           </button>
           <pre className="text-sm text-gray-300 font-mono overflow-x-auto">
-            <code>{version.code}</code>
+            <code style={{ whiteSpace: 'pre-wrap' }}>{version.content}</code>
           </pre>
         </div>
       </div>
