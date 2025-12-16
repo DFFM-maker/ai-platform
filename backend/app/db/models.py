@@ -13,7 +13,8 @@ class User(Base):
     password_hash = Column(String)
     role = Column(SQLEnum('admin', 'user', 'readonly', name='user_role', create_type=False), default="user")
     is_active = Column(Boolean, default=True)
-    
+    current_model = Column(String, nullable=True)
+        
     # Campi per 2FA
     totp_secret = Column(String, nullable=True)
     is_2fa_enabled = Column(Boolean, default=False)

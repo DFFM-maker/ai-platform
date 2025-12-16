@@ -7,11 +7,16 @@ class ChatHistoryService:
     def __init__(self, db: AsyncSession):
         self.db = db
 
-    async def create_session(self, title: str, user_id: uuid.UUID = None):
-        new_session = ChatSession(title=title, user_id=user_id)
-        self.db.add(new_session)
-        await self.db.flush()
-        return new_session
+    async def create_session(self, title: str, model_name: str = None, preset_name: str = None, user_id: uuid.UUID = None):
+            new_session = ChatSession(
+                title=title, 
+                user_id=user_id,
+                current_model=model_name,   # Salva il modello tecnico
+                current_preset=preset_name  # Salva il preset logico
+            )
+            self.db.add(new_session)
+            await self.db.flush()
+            return new_session
 
     async def list_sessions(self, user_id: uuid.UUID = None):
         query = select(ChatSession).order_by(ChatSession.updated_at.desc())
@@ -129,6 +134,14 @@ class ChatHistoryService:
         query_ver = select(ChatResponseVersion).where(ChatResponseVersion.id == uuid.UUID(version_id))
         res_ver = await self.db.execute(query_ver)
         target_version = res_ver.scalar_one()
+        
+    async def update_session_preset(self, session_id: str, preset_name: str):
+        query = select(ChatSession).where(ChatSession.id == uuid.UUID(session_id))
+        result = await self.db.execute(query)
+        session = result.scalar_one_or_none()
+        if session:
+            session.current_preset = preset_name
+            await self.db.commit()
         
         # 2. Trova tutte le versioni esistenti per questo messaggio e marca is_current=False
         existing_versions_query = select(ChatResponseVersion).where(ChatResponseVersion.chat_message_id == target_version.chat_message_id)
